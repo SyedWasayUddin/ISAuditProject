@@ -234,3 +234,40 @@ ForEach ($Policy in $FGPolicies) {
 }
 
 
+$ADUsers = @( 
+    Get-ADUser -Filter * -ResultPageSize $PageSize -Properties `
+        AccountExpirationDate, accountExpires, AccountNotDelegated, AdminCount, AllowReversiblePasswordEncryption, `
+        CannotChangePassword, CanonicalName, Company, Department, Description, DistinguishedName, `
+        DoesNotRequirePreAuth, Enabled, givenName, homeDirectory, Info, LastLogonDate, lastLogonTimestamp, `
+        LockedOut, LogonWorkstations, mail, Manager, memberOf, middleName, mobile, `
+        'msDS-AllowedToDelegateTo', 'msDS-SupportedEncryptionTypes', Name, PasswordExpired, PasswordLastSet, `
+        PasswordNeverExpires, PasswordNotRequired, primaryGroupID, profilePath, pwdLastSet, SamAccountName, `
+        ScriptPath, servicePrincipalName, SID, SIDHistory, SmartcardLogonRequired, sn, Title, `
+        TrustedForDelegation, TrustedToAuthForDelegation, UseDESKeyOnly, UserAccountControl, whenChanged, whenCreated
+)
+
+
+$ADGroups = Get-ADGroup -Filter *
+
+$GroupObj = @()
+foreach ($Group in $ADGroups) {
+    $Obj = New-Object PSObject
+    $Obj | Add-Member -MemberType NoteProperty -Name "GroupName" -Value $Group.Name
+    $Obj | Add-Member -MemberType NoteProperty -Name "DistinguishedName" -Value $Group.DistinguishedName
+    $Obj | Add-Member -MemberType NoteProperty -Name "GroupScope" -Value $Group.GroupScope
+    $Obj | Add-Member -MemberType NoteProperty -Name "Description" -Value $Group.Description
+    $GroupObj += $Obj
+}
+
+$GroupMembers = @()
+foreach ($Group in $ADGroups) {
+    $Members = Get-ADGroupMember -Identity $Group.DistinguishedName -ErrorAction SilentlyContinue
+    foreach ($Member in $Members) {
+        $MemberObj = New-Object PSObject
+        $MemberObj | Add-Member -MemberType NoteProperty -Name "Group" -Value $Group.Name
+        $MemberObj | Add-Member -MemberType NoteProperty -Name "Member" -Value $Member.SamAccountName
+        $MemberObj | Add-Member -MemberType NoteProperty -Name "MemberType" -Value $Member.objectClass
+        $GroupMembers += $MemberObj
+    }
+}
+
