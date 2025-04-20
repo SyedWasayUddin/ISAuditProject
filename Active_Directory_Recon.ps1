@@ -271,3 +271,26 @@ foreach ($Group in $ADGroups) {
     }
 }
 
+$ADOUs = @( Get-ADOrganizationalUnit -Filter * -Properties DistinguishedName, Description, Name, whenCreated, whenChanged )
+
+If ($ADOUs) {
+    Write-Verbose "[*] Total OUs: $([ADRecon.ADWSClass]::ObjectCount($ADOUs))"
+    $OUObj = [ADRecon.ADWSClass]::OUParser($ADOUs, $Threads)
+    Remove-Variable ADOUs
+}
+
+$ADGPOs = @( Get-GPO -All )
+
+If ($ADGPOs) {
+    Write-Verbose "[*] Total GPOs: $([ADRecon.ADWSClass]::ObjectCount($ADGPOs))"
+    $GPOObj = [ADRecon.ADWSClass]::GPOParser($ADGPOs, $Threads)
+    Remove-Variable ADGPOs
+}
+
+$ADSOMs = @( Get-ADOrganizationalUnit -Filter * -Properties gPLink )
+
+If ($ADSOMs) {
+    Write-Verbose "[*] Total gPLinks: $([ADRecon.ADWSClass]::ObjectCount($ADSOMs))"
+    $gPLinkObj = [ADRecon.ADWSClass]::SOMParser($ADGPOs, $ADSOMs, $Threads)
+    Remove-Variable ADSOMs
+}
