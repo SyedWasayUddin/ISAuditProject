@@ -73,3 +73,53 @@
     Create Active_Directory_Recon Log using Start-Transcript
 
 #>
+
+[CmdletBinding()]
+param
+(
+    [Parameter(Mandatory = $false, HelpMessage = "Which method to use; ADWS (default), LDAP")]
+    [ValidateSet('ADWS', 'LDAP')]
+    [string] $Method = 'ADWS',
+
+    [Parameter(Mandatory = $false, HelpMessage = "Domain Controller IP Address or Domain FQDN.")]
+    [string] $DomainController = '',
+
+    [Parameter(Mandatory = $false, HelpMessage = "Domain Credentials.")]
+    [Management.Automation.PSCredential] $Credential = [Management.Automation.PSCredential]::Empty,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Path for ADRecon output folder containing the CSV files to generate the ADRecon-Report.xlsx. Use it to generate the ADRecon-Report.xlsx when Microsoft Excel is not installed on the host used to run ADRecon.")]
+    [string] $GenExcel,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Path for ADRecon output folder to save the CSV/XML/JSON/HTML files and the ADRecon-Report.xlsx. (The folder specified will be created if it doesn't exist)")]
+    [string] $OutputDir,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Which modules to run; Comma separated; e.g Forest,Domain (Default all except Kerberoast, DomainAccountsusedforServiceLogon)")]
+    [ValidateSet('Forest', 'Domain', 'Trusts', 'Sites', 'Subnets', 'SchemaHistory', 'PasswordPolicy', 'FineGrainedPasswordPolicy', 'DomainControllers', 'Users', 'UserSPNs', 'PasswordAttributes', 'Groups', 'GroupChanges', 'GroupMembers', 'OUs', 'GPOs', 'gPLinks', 'DNSZones', 'DNSRecords', 'Printers', 'Computers', 'ComputerSPNs', 'LAPS', 'BitLocker', 'ACLs', 'GPOReport', 'Kerberoast', 'DomainAccountsusedforServiceLogon', 'Default')]
+    [array] $Collect = 'Default',
+
+    [Parameter(Mandatory = $false, HelpMessage = "Output type; Comma seperated; e.g STDOUT,CSV,XML,JSON,HTML,Excel (Default STDOUT with -Collect parameter, else CSV and Excel)")]
+    [ValidateSet('STDOUT', 'CSV', 'XML', 'JSON', 'EXCEL', 'HTML', 'All', 'Default')]
+    [array] $OutputType = 'Default',
+
+    [Parameter(Mandatory = $false, HelpMessage = "Timespan for Dormant accounts. Default 90 days")]
+    [ValidateRange(1,1000)]
+    [int] $DormantTimeSpan = 90,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Maximum machine account password age. Default 30 days")]
+    [ValidateRange(1,1000)]
+    [int] $PassMaxAge = 30,
+
+    [Parameter(Mandatory = $false, HelpMessage = "The PageSize to set for the LDAP searcher object. Default 200")]
+    [ValidateRange(1,10000)]
+    [int] $PageSize = 200,
+
+    [Parameter(Mandatory = $false, HelpMessage = "The number of threads to use during processing of objects. Default 10")]
+    [ValidateRange(1,100)]
+    [int] $Threads = 10,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Only collect details for enabled objects. Default `$false")]
+    [bool] $OnlyEnabled = $false,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Create ADRecon Log using Start-Transcript.")]
+    [switch] $Log
+)
