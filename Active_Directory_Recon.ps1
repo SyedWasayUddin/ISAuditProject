@@ -185,3 +185,52 @@ If ($Trusts) {
     }
 }
 
+$ADDomainControllers = Get-ADDomainController -Filter *
+
+$DomainControllerObj = @()
+ForEach ($DC in $ADDomainControllers) {
+    $Obj = New-Object PSObject
+    $Obj | Add-Member -MemberType NoteProperty -Name "HostName" -Value $DC.HostName
+    $Obj | Add-Member -MemberType NoteProperty -Name "IPv4Address" -Value $DC.IPv4Address
+    $Obj | Add-Member -MemberType NoteProperty -Name "Site" -Value $DC.Site
+    $Obj | Add-Member -MemberType NoteProperty -Name "IsGlobalCatalog" -Value $DC.IsGlobalCatalog
+    $Obj | Add-Member -MemberType NoteProperty -Name "IsReadOnly" -Value $DC.IsReadOnly
+    $Obj | Add-Member -MemberType NoteProperty -Name "OperationMasterRoles" -Value ($DC.OperationMasterRoles -join ", ")
+    $DomainControllerObj += $Obj
+}
+
+# Simplified extraction logic (actual implementation may involve C#-style embedded logic or PInvoke)
+$DCSMBObj = New-Object PSObject
+$DCSMBObj | Add-Member -MemberType NoteProperty -Name "SMB1(NT LM 0.12)" -Value $null
+$DCSMBObj | Add-Member -MemberType NoteProperty -Name "SMB2(0x0202)" -Value $null
+$DCSMBObj | Add-Member -MemberType NoteProperty -Name "SMB3(0x0300)" -Value $null
+$DCSMBObj | Add-Member -MemberType NoteProperty -Name "SMB Signing" -Value $null
+
+$PasswordPolicy = Get-ADDefaultDomainPasswordPolicy
+
+$PolicyObj = @()
+$PolicyObj += New-Object PSObject -Property @{
+    "MinPasswordLength" = $PasswordPolicy.MinPasswordLength
+    "PasswordHistoryCount" = $PasswordPolicy.PasswordHistoryCount
+    "MaxPasswordAge" = $PasswordPolicy.MaxPasswordAge
+    "MinPasswordAge" = $PasswordPolicy.MinPasswordAge
+    "ComplexityEnabled" = $PasswordPolicy.ComplexityEnabled
+    "ReversibleEncryptionEnabled" = $PasswordPolicy.ReversibleEncryptionEnabled
+}
+
+$FGPolicies = Get-ADFineGrainedPasswordPolicy -Filter *
+
+$FGPolicyObj = @()
+ForEach ($Policy in $FGPolicies) {
+    $Obj = New-Object PSObject
+    $Obj | Add-Member -MemberType NoteProperty -Name "Name" -Value $Policy.Name
+    $Obj | Add-Member -MemberType NoteProperty -Name "Precedence" -Value $Policy.Precedence
+    $Obj | Add-Member -MemberType NoteProperty -Name "MinPasswordLength" -Value $Policy.MinPasswordLength
+    $Obj | Add-Member -MemberType NoteProperty -Name "PasswordHistoryCount" -Value $Policy.PasswordHistoryCount
+    $Obj | Add-Member -MemberType NoteProperty -Name "MaxPasswordAge" -Value $Policy.MaxPasswordAge
+    $Obj | Add-Member -MemberType NoteProperty -Name "MinPasswordAge" -Value $Policy.MinPasswordAge
+    $Obj | Add-Member -MemberType NoteProperty -Name "ComplexityEnabled" -Value $Policy.ComplexityEnabled
+    $FGPolicyObj += $Obj
+}
+
+
