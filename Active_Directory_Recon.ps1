@@ -123,3 +123,65 @@ param
     [Parameter(Mandatory = $false, HelpMessage = "Create ADRecon Log using Start-Transcript.")]
     [switch] $Log
 )
+Try {
+    $ADDomain = Get-ADDomain
+}
+Catch {
+    Write-Warning "[Get-ADRDomain] Error getting Domain Context"
+    Write-Verbose "[EXCEPTION] $($_.Exception.Message)"
+    Return $null
+}
+
+If ($ADDomain) {
+    $DomainObj = @()
+
+    $FLAD = @{
+        0 = "Windows2000"
+        1 = "Windows2003/Interim"
+        2 = "Windows2003"
+        3 = "Windows2008"
+        4 = "Windows2008R2"
+        5 = "Windows2012"
+        6 = "Windows2012R2"
+        7 = "Windows2016"
+    }
+
+    $DomainMode = $FLAD[[convert]::ToInt32($ADDomain.DomainMode)] + "Domain"
+    Remove-Variable FLAD
+
+    If (-Not $DomainMode) {
+        $DomainMode = $ADDomain.DomainMode
+    }
+
+    $ObjValues = @("Name", $ADDomain.DNSRoot, "NetBIOS", $ADDomain.NetBIOSName, "Functional Level", $DomainMode, "DomainSID", $ADDomain.DomainSID.Value)
+
+    For ($i = 0; $i -lt $($ObjValues.Count); $i++) {
+        $Obj = New-Object PSObject
+        $Obj | Add-Member -MemberType NoteProperty -Name "Category" -Value $ObjValues[$i]
+        $Obj | Add-Member -MemberType NoteProperty -Name "Value" -Value $ObjValues[$i+1]
+        $i++
+        $DomainObj += $Obj
+    }
+}
+Try {
+    $Trusts = Get-ADTrust -Filter *
+}
+Catch {
+    Write-Warning "[Get-ADTrusts] Error getting Trusts"
+    Write-Verbose "[EXCEPTION] $($_.Exception.Message)"
+    Return $null
+}
+
+If ($Trusts) {
+    $TrustObj = @()
+    ForEach ($Trust in $Trusts) {
+        $Obj = New-Object PSObject
+        $Obj | Add-Member -MemberType NoteProperty -Name "SourceDomain" -Value $Trust.SourceName
+        $Obj | Add-Member -MemberType NoteProperty -Name "TargetDomain" -Value $Trust.TargetName
+        $Obj | Add-Member -MemberType NoteProperty -Name "TrustType" -Value $Trust.TrustType
+        $Obj | Add-Member -MemberType NoteProperty -Name "TrustDirection" -Value $Trust.Direction
+        $Obj | Add-Member -MemberType NoteProperty -Name "TrustAttributes" -Value $Trust.TrustAttributes
+        $TrustObj += $Obj
+    }
+}
+
