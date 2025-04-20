@@ -325,3 +325,27 @@ $ADUsers = @(
 If ($ADUsers) {
     Write-Verbose "[*] Service Accounts Found: $($ADUsers.Count)"
 }
+
+# Start logging the session
+Start-Transcript -Path "$OutputFolder\ADRecon-Execution.log" -Force
+
+...
+
+# At the end of script execution
+Stop-Transcript
+
+# Final report generation step
+Write-Verbose "[*] Generating ADRecon-Report.xlsx"
+
+$Workbook = Get-ADRExcelWorkbook -Name "Table of Contents"
+Get-ADRExcelWorkbook -Name "Users"
+Get-ADRExcelWorkbook -Name "Groups"
+Get-ADRExcelWorkbook -Name "Computers"
+Get-ADRExcelWorkbook -Name "DNS Zones"
+Get-ADRExcelWorkbook -Name "Printers"
+Get-ADRExcelWorkbook -Name "GPOs"
+Get-ADRExcelWorkbook -Name "gPLinks"
+Get-ADRExcelWorkbook -Name "Domain Controllers"
+# (many more depending on what modules were collected...)
+
+Write-Verbose "[+] Excel Report Saved to: $OutputFolder\<domain>-ADRecon-Report.xlsx"
