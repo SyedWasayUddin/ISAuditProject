@@ -294,3 +294,34 @@ If ($ADSOMs) {
     $gPLinkObj = [ADRecon.ADWSClass]::SOMParser($ADGPOs, $ADSOMs, $Threads)
     Remove-Variable ADSOMs
 }
+
+$ADFileName = -join($ReportPath,'\','DNSZones.csv')
+Get-ADRExcelWorkbook -Name "DNS Zones"
+
+$ADFileName = -join($ReportPath,'\','DNSRecords.csv')
+Get-ADRExcelWorkbook -Name "DNS Records"
+
+$ADPrinters = @( Get-ADObject -LDAPFilter "(objectCategory=printQueue)" -Properties Name, ServerName, Location, ShareName )
+
+If ($ADPrinters) {
+    Write-Verbose "[*] Total Printers: $([ADRecon.ADWSClass]::ObjectCount($ADPrinters))"
+    $PrinterObj = [ADRecon.ADWSClass]::PrinterParser($ADPrinters, $Threads)
+    Remove-Variable ADPrinters
+}
+
+$ADComputers = @( Get-ADComputer -Filter * -Properties DNSHostName, OperatingSystem, OperatingSystemServicePack, OperatingSystemVersion, IPv4Address, LastLogonDate, PasswordLastSet )
+
+If ($ADComputers) {
+    Write-Verbose "[*] Total Computers: $([ADRecon.ADWSClass]::ObjectCount($ADComputers))"
+    $ComputerObj = [ADRecon.ADWSClass]::ComputerParser($ADComputers, $StartDate, $DormantDays, $PasswordMaxAge, $Threads)
+    Remove-Variable ADComputers
+}
+
+$ADUsers = @( 
+    Get-ADObject -LDAPFilter "(&(samAccountType=805306368)(servicePrincipalName=*)(!userAccountControl:1.2.840.113556.1.4.803:=2))" `
+    -Properties Name, Description, memberOf, sAMAccountName, servicePrincipalName, primaryGroupID, pwdLastSet, userAccountControl
+)
+
+If ($ADUsers) {
+    Write-Verbose "[*] Service Accounts Found: $($ADUsers.Count)"
+}
